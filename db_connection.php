@@ -1,7 +1,7 @@
 <?php
 $host = "localhost";
 $dbname = "evm";
-$username = "root";
+$username = "evm_user";
 $password = "Alex@mysql123";
 
 try {
