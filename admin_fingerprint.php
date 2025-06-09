@@ -7,7 +7,7 @@ if (!isset($_SESSION['admin'])) {
 }
 
 // ESP32 Status URL
-$adminStatusUrl = "http://192.168.1.5/EEVM/admin_status.php";
+$adminStatusUrl = "http://evm.fastnetug.com/admin_status.php";
 
 ?>
 
