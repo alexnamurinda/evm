@@ -386,7 +386,7 @@ if (isset($_SESSION['admin_authenticated'])) {
                 
                 // Send verification request to ESP32
                 $.ajax({
-                    url: 'admin_verify.php',
+                    url: 'http://192.168.1.5/admin_verify',
                     type: 'GET',
                     cache: false,
                     success: function(data) {
