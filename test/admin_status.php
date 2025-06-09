@@ -2,7 +2,7 @@
 // admin_status.php - Checks verification status from ESP32
 session_start();
 
-$esp32_ip = "192.168.1.9"; // Get the ESP32 IP from the connected clients list or set manually
+$esp32_ip = "192.168.1.13"; // Get the ESP32 IP from the connected clients list or set manually
 
 // Check if we already have a successful response stored in session
 if (isset($_SESSION['admin_authenticated']) && $_SESSION['admin_authenticated'] === true) {

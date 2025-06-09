@@ -458,7 +458,7 @@ $course = $_SESSION['course'];
             }
 
             // Set your voting period end time (change this to your desired end date and time)
-            const endTime = new Date("2025-04-30T00:00:00").getTime();
+            const endTime = new Date("2025-07-30T00:00:00").getTime();
 
             // Start the countdown
             startCountdown(endTime);

@@ -2,7 +2,7 @@
 // admin_status.php - Checks verification status from ESP32
 session_start();
 
-$esp32_ip = "192.168.1.9"; // ESP32 IP address
+$esp32_ip = "192.168.1.13"; // ESP32 IP address
 
 // Ensure we're checking for an admin that hasn't been fully authenticated yet
 if (!isset($_SESSION['admin']) || $_SESSION['admin'] !== true) {

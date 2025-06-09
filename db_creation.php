@@ -1,7 +1,7 @@
 <?php
 // Database connection details
 $db_host = 'localhost';
-$db_user = 'evm_user';
+$db_user = 'root';
 $db_password = 'Alex@mysql123';
 $db_name = 'evm';
 

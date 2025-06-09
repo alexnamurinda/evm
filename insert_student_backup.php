@@ -8,7 +8,7 @@ if ($_SERVER["REQUEST_METHOD"] == "POST") {
     $program = $_POST['program'];
 
     // Send request to ESP8266 to capture fingerprint (Suppress warnings with '@')
-    $response = @file_get_contents("http://192.168.1.9/capture_fingerprint");
+    $response = @file_get_contents("http://192.168.1.13/capture_fingerprint");
 
     //HTML Structure with Centered Content
     echo '<div style="display: flex; justify-content: center; align-items: center; height: 100vh; text-align: center; font-family: Arial, sans-serif;">';

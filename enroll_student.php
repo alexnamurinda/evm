@@ -20,7 +20,7 @@ if ($_SERVER["REQUEST_METHOD"] == "POST") {
         echo '<h2 style="color: red;">Student ID already enrolled!</h2>';
         echo '<button onclick="window.history.back()" style="padding: 10px 20px; background-color: #dc3545; color: white; border: none; border-radius: 8px;">RETRY</button>';
     } else {
-        $esp_ip = "192.168.1.9"; // ESP32 IP address
+        $esp_ip = "192.168.1.13"; // ESP32 IP address
 
         $response = @file_get_contents("http://$esp_ip/capture_fingerprint");
 
