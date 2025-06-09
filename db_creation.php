@@ -1,8 +1,8 @@
 <?php
 // Database connection details
 $db_host = 'localhost';
-$db_user = 'root';
-$db_password = 'Alex@mysql123';
+$db_user = 'evn_user';
+$db_password = 'evm@mysql123';
 $db_name = 'evm';
 
 try {
