@@ -1,7 +1,7 @@
 
 <?php
 // admin_verify.php - Sends verification request to ESP32
-$esp32_ip = "192.168.1.13"; // Get the ESP32 IP from the connected clients list or set manually
+$esp32_ip = "192.168.1.5"; // Get the ESP32 IP from the connected clients list or set manually
 
 // Try to get ESP32 IP if not set manually
 if (empty($esp32_ip)) {

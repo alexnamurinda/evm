@@ -22,7 +22,7 @@ if ($_SERVER["REQUEST_METHOD"] == "POST") {
         echo '<button onclick="window.history.back()" style="padding: 10px 20px; background-color: #dc3545; color: white; border: none; border-radius: 8px; font-size: 16px; cursor: pointer; margin-top: 15px;">RETRY</button>';
     } else {
         // Send request to ESP8266 to capture fingerprint (Suppress warnings with '@')
-        $response = @file_get_contents("http://192.168.1.13/capture_fingerprint");
+        $response = @file_get_contents("http://192.168.1.5/capture_fingerprint");
 
         // Proceed only if fingerprint capture is successful
         if ($response === "success") {

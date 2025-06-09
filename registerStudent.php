@@ -2,7 +2,7 @@
 $student_id = "2345"; // Example student ID
 
 // ESP8266 IP address
-$esp8266_ip = "http://192.168.1.13/captureFingerprint?student_id=" . $student_id;
+$esp8266_ip = "http://192.168.1.5/captureFingerprint?student_id=" . $student_id;
 
 // Use cURL to make an HTTP GET request
 $ch = curl_init();

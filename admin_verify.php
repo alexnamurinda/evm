@@ -13,7 +13,7 @@ if (isset($_SESSION['admin_authenticated'])) {
     unset($_SESSION['admin_authenticated']);
 }
 
-$esp32_ip = "192.168.1.13"; // ESP32 IP address
+$esp32_ip = "192.168.1.5"; // ESP32 IP address
 
 // Send request to ESP32
 $url = "http://{$esp32_ip}/admin_verify";
