@@ -4,7 +4,6 @@ const CONFIG = {
     SHEET_URL: 'https://script.google.com/macros/s/AKfycbw8vmk6Xa1MmyuucBa2FqR_8L5oNCrKJPFEn2E3PRKsRljQEDep0Rp4hBApzwOPhTRN7w/exec' // Replace with your Web App URL
 };
 
-
 // Global variables
 let deliveryData = [];
 
@@ -61,11 +60,11 @@ async function submitDeliveryRecord(data) {
     showLoading(true);
     
     try {
+        // Use fetch with proper headers for Google Apps Script
         const response = await fetch(CONFIG.SHEET_URL, {
             method: 'POST',
-            mode: 'no-cors',
             headers: {
-                'Content-Type': 'application/json',
+                'Content-Type': 'text/plain',
             },
             body: JSON.stringify({
                 action: 'addRecord',
@@ -73,14 +72,23 @@ async function submitDeliveryRecord(data) {
             })
         });
         
-        // Since we're using no-cors, we can't read the response
-        // Assume success and reset form
-        deliveryForm.reset();
-        alert('Delivery record added successfully!');
+        if (response.ok) {
+            const result = await response.json();
+            if (result.success) {
+                deliveryForm.reset();
+                alert('Delivery record added successfully!');
+                // Set today's date again for next entry
+                document.getElementById('deliveryDate').value = new Date().toISOString().split('T')[0];
+            } else {
+                throw new Error(result.error || 'Failed to add record');
+            }
+        } else {
+            throw new Error('Network response was not ok');
+        }
         
     } catch (error) {
         console.error('Error submitting record:', error);
-        alert('Error submitting record. Please try again.');
+        alert('Error submitting record: ' + error.message);
     }
     
     showLoading(false);
@@ -92,21 +100,25 @@ async function loadDashboardData() {
     try {
         // Fetch data from Google Sheets
         const response = await fetch(`${CONFIG.SHEET_URL}?action=getData`);
-        const data = await response.json();
         
-        if (data.success) {
-            deliveryData = data.records;
-            updateDashboard();
-            populateTable();
+        if (response.ok) {
+            const data = await response.json();
+            
+            if (data.success) {
+                deliveryData = data.records || [];
+                console.log('Loaded records:', deliveryData.length);
+                updateDashboard();
+                populateTable();
+            } else {
+                console.error('Error loading data:', data.error);
+                showDemoData();
+            }
         } else {
-            console.error('Error loading data:', data.error);
-            // Show demo data if real data fails
-            showDemoData();
+            throw new Error('Failed to fetch data');
         }
         
     } catch (error) {
         console.error('Error fetching data:', error);
-        // Show demo data if fetch fails
         showDemoData();
     }
     
@@ -114,11 +126,11 @@ async function loadDashboardData() {
 }
 
 function showDemoData() {
-    // Demo data for testing
+    // Demo data for testing when Google Sheets is not available
     deliveryData = [
         {
             invoiceNumber: 'INV001',
-            deliveryDate: '2025-01-15',
+            deliveryDate: '2025-07-20',
             dispatchTime: '09:00',
             arrivalTime: '09:30',
             duration: 30,
@@ -129,7 +141,7 @@ function showDemoData() {
         },
         {
             invoiceNumber: 'INV002',
-            deliveryDate: '2025-01-15',
+            deliveryDate: '2025-07-19',
             dispatchTime: '10:00',
             arrivalTime: '11:00',
             duration: 60,
@@ -145,6 +157,21 @@ function showDemoData() {
 }
 
 function updateDashboard() {
+    if (!deliveryData || deliveryData.length === 0) {
+        // Set all metrics to 0 if no data
+        document.getElementById('dailySuccessRate').textContent = '0.0%';
+        document.getElementById('dailyTotal').textContent = '0';
+        document.getElementById('dailySuccessful').textContent = '0';
+        document.getElementById('weeklySuccessRate').textContent = '0.0%';
+        document.getElementById('weeklyDays').textContent = '0';
+        document.getElementById('weeklyTotal').textContent = '0';
+        document.getElementById('monthlySuccessRate').textContent = '0.0%';
+        
+        const progressBar = document.getElementById('targetProgress');
+        progressBar.style.width = '0%';
+        return;
+    }
+
     const today = new Date().toISOString().split('T')[0];
     const currentWeek = getCurrentWeekDates();
     const currentMonth = getCurrentMonthDates();
@@ -168,7 +195,7 @@ function updateDashboard() {
     document.getElementById('weeklyDays').textContent = weeklyDaysWithDeliveries;
     document.getElementById('weeklyTotal').textContent = weeklyDeliveries.length;
     
-    // Monthly Performance (Target Achievement)
+    // Monthly Performance
     const monthlyDeliveries = deliveryData.filter(d => currentMonth.includes(d.deliveryDate));
     const monthlySuccessful = monthlyDeliveries.filter(d => d.status === 'Success').length;
     const monthlySuccessRate = monthlyDeliveries.length > 0 ? ((monthlySuccessful / monthlyDeliveries.length) * 100).toFixed(1) : 0;
@@ -211,6 +238,7 @@ function populateTable(filterDate = null) {
 }
 
 function calculateDuration(dispatchTime, arrivalTime) {
+    if (!dispatchTime || !arrivalTime) return 0;
     const dispatch = new Date(`2000-01-01T${dispatchTime}`);
     const arrival = new Date(`2000-01-01T${arrivalTime}`);
     const diffMs = arrival - dispatch;
@@ -218,12 +246,20 @@ function calculateDuration(dispatchTime, arrivalTime) {
 }
 
 function formatDate(dateString) {
-    const date = new Date(dateString);
-    return date.toLocaleDateString('en-GB', {
-        day: '2-digit',
-        month: '2-digit',
-        year: 'numeric'
-    });
+    if (!dateString) return 'Invalid Date';
+    
+    try {
+        const date = new Date(dateString);
+        if (isNaN(date.getTime())) return 'Invalid Date';
+        
+        return date.toLocaleDateString('en-GB', {
+            day: '2-digit',
+            month: '2-digit',
+            year: 'numeric'
+        });
+    } catch (error) {
+        return 'Invalid Date';
+    }
 }
 
 function getCurrentWeekDates() {
@@ -267,11 +303,10 @@ async function deleteRecord(invoiceNumber) {
     showLoading(true);
     
     try {
-        await fetch(CONFIG.SHEET_URL, {
+        const response = await fetch(CONFIG.SHEET_URL, {
             method: 'POST',
-            mode: 'no-cors',
             headers: {
-                'Content-Type': 'application/json',
+                'Content-Type': 'text/plain',
             },
             body: JSON.stringify({
                 action: 'deleteRecord',
@@ -279,21 +314,33 @@ async function deleteRecord(invoiceNumber) {
             })
         });
         
-        // Remove from local data and refresh display
-        deliveryData = deliveryData.filter(record => record.invoiceNumber !== invoiceNumber);
-        updateDashboard();
-        populateTable();
+        if (response.ok) {
+            const result = await response.json();
+            if (result.success) {
+                // Remove from local data and refresh display
+                deliveryData = deliveryData.filter(record => record.invoiceNumber !== invoiceNumber);
+                updateDashboard();
+                populateTable();
+                alert('Record deleted successfully!');
+            } else {
+                throw new Error(result.error || 'Failed to delete record');
+            }
+        } else {
+            throw new Error('Network response was not ok');
+        }
         
     } catch (error) {
         console.error('Error deleting record:', error);
-        alert('Error deleting record. Please try again.');
+        alert('Error deleting record: ' + error.message);
     }
     
     showLoading(false);
 }
 
 function showLoading(show) {
-    loadingOverlay.classList.toggle('hidden', !show);
+    if (loadingOverlay) {
+        loadingOverlay.classList.toggle('hidden', !show);
+    }
 }
 
 // Filter functionality
@@ -307,7 +354,7 @@ document.getElementById('clearFilterBtn').addEventListener('click', () => {
     populateTable();
 });
 
-// Initialize with demo data on page load
+// Initialize on page load
 document.addEventListener('DOMContentLoaded', () => {
     // Set today's date as default for new delivery
     document.getElementById('deliveryDate').value = new Date().toISOString().split('T')[0];
