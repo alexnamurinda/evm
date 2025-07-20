@@ -1,7 +1,7 @@
 // Configuration - Replace with your actual Google Sheets details
 const CONFIG = {
     SHEET_ID: '1jddhIBS_JxfDq-bwMgAmqBI8VBX2VCAhT6wk2aBcBmU', // Replace with your Google Sheet ID
-    SHEET_URL: 'https://script.google.com/macros/s/AKfycbw8vmk6Xa1MmyuucBa2FqR_8L5oNCrKJPFEn2E3PRKsRljQEDep0Rp4hBApzwOPhTRN7w/exec' // Replace with your Web App URL
+    SHEET_URL: 'https://script.google.com/macros/s/AKfycbx-eHp2Au6bCdpW6CbjQ1CzaCnqy1ET6MJVXXvG4-hUNKwLj9J-ClLAM9N39la7TKJVig/exec' // Replace with your Web App URL
 };
 
 // Global variables
@@ -44,14 +44,25 @@ deliveryForm.addEventListener('submit', async (e) => {
     e.preventDefault();
     
     const formData = {
-        invoiceNumber: document.getElementById('invoiceNumber').value,
+        invoiceNumber: document.getElementById('invoiceNumber').value.trim(),
         deliveryDate: document.getElementById('deliveryDate').value,
         dispatchTime: document.getElementById('dispatchTime').value,
         arrivalTime: document.getElementById('arrivalTime').value,
-        storeSupervisor: document.getElementById('storeSupervisor').value,
-        deliveryPerson: document.getElementById('deliveryPerson').value,
-        vehicleNumber: document.getElementById('vehicleNumber').value
+        storeSupervisor: document.getElementById('storeSupervisor').value.trim(),
+        deliveryPerson: document.getElementById('deliveryPerson').value.trim(),
+        vehicleNumber: document.getElementById('vehicleNumber').value.trim()
     };
+    
+    // Validate arrival time is after dispatch time
+    if (formData.dispatchTime && formData.arrivalTime) {
+        const dispatch = new Date(`2000-01-01T${formData.dispatchTime}`);
+        const arrival = new Date(`2000-01-01T${formData.arrivalTime}`);
+        
+        if (arrival <= dispatch) {
+            alert('Arrival time must be after dispatch time');
+            return;
+        }
+    }
     
     await submitDeliveryRecord(formData);
 });
@@ -60,6 +71,8 @@ async function submitDeliveryRecord(data) {
     showLoading(true);
     
     try {
+        console.log('Submitting data:', data);
+        
         // Use fetch with proper headers for Google Apps Script
         const response = await fetch(CONFIG.SHEET_URL, {
             method: 'POST',
@@ -74,6 +87,8 @@ async function submitDeliveryRecord(data) {
         
         if (response.ok) {
             const result = await response.json();
+            console.log('Server response:', result);
+            
             if (result.success) {
                 deliveryForm.reset();
                 alert('Delivery record added successfully!');
@@ -83,7 +98,7 @@ async function submitDeliveryRecord(data) {
                 throw new Error(result.error || 'Failed to add record');
             }
         } else {
-            throw new Error('Network response was not ok');
+            throw new Error(`Network response was not ok: ${response.status}`);
         }
         
     } catch (error) {
@@ -98,15 +113,29 @@ async function loadDashboardData() {
     showLoading(true);
     
     try {
+        console.log('Loading dashboard data...');
+        
         // Fetch data from Google Sheets
         const response = await fetch(`${CONFIG.SHEET_URL}?action=getData`);
         
         if (response.ok) {
             const data = await response.json();
+            console.log('Received data:', data);
             
             if (data.success) {
                 deliveryData = data.records || [];
                 console.log('Loaded records:', deliveryData.length);
+                console.log('Sample record:', deliveryData[0]);
+                
+                // Clean and validate the data
+                deliveryData = deliveryData.filter(record => {
+                    return record.invoiceNumber && 
+                           record.deliveryDate && 
+                           record.deliveryDate !== 'Invalid Date' &&
+                           !record.deliveryDate.includes('1899');
+                });
+                
+                console.log('Filtered records:', deliveryData.length);
                 updateDashboard();
                 populateTable();
             } else {
@@ -114,7 +143,7 @@ async function loadDashboardData() {
                 showDemoData();
             }
         } else {
-            throw new Error('Failed to fetch data');
+            throw new Error(`Failed to fetch data: ${response.status}`);
         }
         
     } catch (error) {
@@ -157,6 +186,8 @@ function showDemoData() {
 }
 
 function updateDashboard() {
+    console.log('Updating dashboard with', deliveryData.length, 'records');
+    
     if (!deliveryData || deliveryData.length === 0) {
         // Set all metrics to 0 if no data
         document.getElementById('dailySuccessRate').textContent = '0.0%';
@@ -176,29 +207,51 @@ function updateDashboard() {
     const currentWeek = getCurrentWeekDates();
     const currentMonth = getCurrentMonthDates();
     
+    console.log('Today:', today);
+    console.log('Current week:', currentWeek);
+    console.log('Sample delivery dates:', deliveryData.slice(0, 3).map(d => d.deliveryDate));
+    
     // Daily Performance
-    const dailyDeliveries = deliveryData.filter(d => d.deliveryDate === today);
+    const dailyDeliveries = deliveryData.filter(d => {
+        const deliveryDate = normalizeDate(d.deliveryDate);
+        return deliveryDate === today;
+    });
+    
     const dailySuccessful = dailyDeliveries.filter(d => d.status === 'Success').length;
     const dailySuccessRate = dailyDeliveries.length > 0 ? ((dailySuccessful / dailyDeliveries.length) * 100).toFixed(1) : 0;
+    
+    console.log('Daily deliveries:', dailyDeliveries.length, 'Successful:', dailySuccessful);
     
     document.getElementById('dailySuccessRate').textContent = `${dailySuccessRate}%`;
     document.getElementById('dailyTotal').textContent = dailyDeliveries.length;
     document.getElementById('dailySuccessful').textContent = dailySuccessful;
     
     // Weekly Performance
-    const weeklyDeliveries = deliveryData.filter(d => currentWeek.includes(d.deliveryDate));
-    const weeklyDaysWithDeliveries = [...new Set(weeklyDeliveries.map(d => d.deliveryDate))].length;
+    const weeklyDeliveries = deliveryData.filter(d => {
+        const deliveryDate = normalizeDate(d.deliveryDate);
+        return currentWeek.includes(deliveryDate);
+    });
+    
+    const weeklyDaysWithDeliveries = [...new Set(weeklyDeliveries.map(d => normalizeDate(d.deliveryDate)))].length;
     const weeklySuccessful = weeklyDeliveries.filter(d => d.status === 'Success').length;
     const weeklySuccessRate = weeklyDeliveries.length > 0 ? ((weeklySuccessful / weeklyDeliveries.length) * 100).toFixed(1) : 0;
+    
+    console.log('Weekly deliveries:', weeklyDeliveries.length, 'Successful:', weeklySuccessful);
     
     document.getElementById('weeklySuccessRate').textContent = `${weeklySuccessRate}%`;
     document.getElementById('weeklyDays').textContent = weeklyDaysWithDeliveries;
     document.getElementById('weeklyTotal').textContent = weeklyDeliveries.length;
     
     // Monthly Performance
-    const monthlyDeliveries = deliveryData.filter(d => currentMonth.includes(d.deliveryDate));
+    const monthlyDeliveries = deliveryData.filter(d => {
+        const deliveryDate = normalizeDate(d.deliveryDate);
+        return currentMonth.includes(deliveryDate);
+    });
+    
     const monthlySuccessful = monthlyDeliveries.filter(d => d.status === 'Success').length;
     const monthlySuccessRate = monthlyDeliveries.length > 0 ? ((monthlySuccessful / monthlyDeliveries.length) * 100).toFixed(1) : 0;
+    
+    console.log('Monthly deliveries:', monthlyDeliveries.length, 'Successful:', monthlySuccessful);
     
     document.getElementById('monthlySuccessRate').textContent = `${monthlySuccessRate}%`;
     
@@ -208,12 +261,40 @@ function updateDashboard() {
     progressBar.style.width = `${progressPercentage}%`;
 }
 
+function normalizeDate(dateString) {
+    if (!dateString) return '';
+    
+    // Handle various date formats
+    if (typeof dateString === 'string') {
+        // Remove time part if present
+        if (dateString.includes('T')) {
+            dateString = dateString.split('T')[0];
+        }
+        
+        // Ensure YYYY-MM-DD format
+        if (dateString.match(/^\d{4}-\d{2}-\d{2}$/)) {
+            return dateString;
+        }
+        
+        // Try to parse and reformat
+        const date = new Date(dateString);
+        if (!isNaN(date.getTime())) {
+            const year = date.getFullYear();
+            const month = String(date.getMonth() + 1).padStart(2, '0');
+            const day = String(date.getDate()).padStart(2, '0');
+            return `${year}-${month}-${day}`;
+        }
+    }
+    
+    return '';
+}
+
 function populateTable(filterDate = null) {
     const tableBody = document.getElementById('deliveryTableBody');
     let filteredData = deliveryData;
     
     if (filterDate) {
-        filteredData = deliveryData.filter(d => d.deliveryDate === filterDate);
+        filteredData = deliveryData.filter(d => normalizeDate(d.deliveryDate) === filterDate);
     }
     
     if (filteredData.length === 0) {
@@ -221,35 +302,51 @@ function populateTable(filterDate = null) {
         return;
     }
     
-    tableBody.innerHTML = filteredData.map(record => `
-        <tr>
-            <td>${formatDate(record.deliveryDate)}</td>
-            <td>${record.invoiceNumber}</td>
-            <td>${record.dispatchTime}</td>
-            <td>${record.arrivalTime}</td>
-            <td>${record.duration || calculateDuration(record.dispatchTime, record.arrivalTime)} min</td>
-            <td><span class="status-${record.status.toLowerCase()}">${record.status}</span></td>
-            <td>${record.storeSupervisor}</td>
-            <td>${record.deliveryPerson}</td>
-            <td>${record.vehicleNumber}</td>
-            <td><button class="delete-btn" onclick="deleteRecord('${record.invoiceNumber}')">Delete</button></td>
-        </tr>
-    `).join('');
+    tableBody.innerHTML = filteredData.map(record => {
+        const duration = record.duration || calculateDuration(record.dispatchTime, record.arrivalTime);
+        const normalizedDate = normalizeDate(record.deliveryDate);
+        
+        return `
+            <tr>
+                <td>${formatDate(normalizedDate)}</td>
+                <td>${record.invoiceNumber}</td>
+                <td>${record.dispatchTime}</td>
+                <td>${record.arrivalTime}</td>
+                <td>${duration} min</td>
+                <td><span class="status-${record.status.toLowerCase()}">${record.status}</span></td>
+                <td>${record.storeSupervisor}</td>
+                <td>${record.deliveryPerson}</td>
+                <td>${record.vehicleNumber}</td>
+                <td><button class="delete-btn" onclick="deleteRecord('${record.invoiceNumber}')">Delete</button></td>
+            </tr>
+        `;
+    }).join('');
 }
 
 function calculateDuration(dispatchTime, arrivalTime) {
     if (!dispatchTime || !arrivalTime) return 0;
-    const dispatch = new Date(`2000-01-01T${dispatchTime}`);
-    const arrival = new Date(`2000-01-01T${arrivalTime}`);
-    const diffMs = arrival - dispatch;
-    return Math.round(diffMs / (1000 * 60)); // Convert to minutes
+    
+    try {
+        const dispatch = new Date(`2000-01-01T${dispatchTime}`);
+        const arrival = new Date(`2000-01-01T${arrivalTime}`);
+        
+        if (isNaN(dispatch.getTime()) || isNaN(arrival.getTime())) {
+            return 0;
+        }
+        
+        const diffMs = arrival - dispatch;
+        return Math.round(diffMs / (1000 * 60)); // Convert to minutes
+    } catch (error) {
+        console.error('Error calculating duration:', error);
+        return 0;
+    }
 }
 
 function formatDate(dateString) {
-    if (!dateString) return 'Invalid Date';
+    if (!dateString || dateString === 'Invalid Date') return 'Invalid Date';
     
     try {
-        const date = new Date(dateString);
+        const date = new Date(dateString + 'T00:00:00'); // Add time to avoid timezone issues
         if (isNaN(date.getTime())) return 'Invalid Date';
         
         return date.toLocaleDateString('en-GB', {
@@ -258,6 +355,7 @@ function formatDate(dateString) {
             year: 'numeric'
         });
     } catch (error) {
+        console.error('Error formatting date:', error);
         return 'Invalid Date';
     }
 }
