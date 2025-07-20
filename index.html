@@ -3,876 +3,139 @@
 <head>
     <meta charset="UTF-8">
     <meta name="viewport" content="width=device-width, initial-scale=1.0">
-    <title>Delivery Tracking System</title>
-    <style>
-        * {
-            margin: 0;
-            padding: 0;
-            box-sizing: border-box;
-        }
-
-        body {
-            font-family: 'Segoe UI', Tahoma, Geneva, Verdana, sans-serif;
-            background: linear-gradient(135deg, #667eea 0%, #764ba2 100%);
-            min-height: 100vh;
-            padding: 20px;
-        }
-
-        .container {
-            max-width: 1200px;
-            margin: 0 auto;
-            background: white;
-            border-radius: 15px;
-            box-shadow: 0 20px 40px rgba(0,0,0,0.1);
-            overflow: hidden;
-        }
-
-        .header {
-            background: linear-gradient(135deg, #2196F3, #1976D2);
-            color: white;
-            padding: 30px;
-            text-align: center;
-        }
-
-        .header h1 {
-            font-size: 2.5em;
-            margin-bottom: 10px;
-        }
-
-        .nav {
-            display: flex;
-            justify-content: center;
-            gap: 20px;
-            margin-top: 20px;
-        }
-
-        .nav-btn {
-            background: rgba(255,255,255,0.2);
-            border: none;
-            color: white;
-            padding: 12px 24px;
-            border-radius: 25px;
-            cursor: pointer;
-            font-size: 16px;
-            transition: all 0.3s ease;
-            backdrop-filter: blur(10px);
-        }
-
-        .nav-btn:hover, .nav-btn.active {
-            background: rgba(255,255,255,0.3);
-            transform: translateY(-2px);
-        }
-
-        .content {
-            padding: 40px;
-        }
-
-        .section {
-            display: none;
-        }
-
-        .section.active {
-            display: block;
-        }
-
-        .form-grid {
-            display: grid;
-            grid-template-columns: repeat(auto-fit, minmax(300px, 1fr));
-            gap: 20px;
-            margin-bottom: 30px;
-        }
-
-        .form-group {
-            display: flex;
-            flex-direction: column;
-        }
-
-        .form-group label {
-            margin-bottom: 8px;
-            font-weight: 600;
-            color: #333;
-        }
-
-        .form-group input, .form-group select {
-            padding: 12px;
-            border: 2px solid #e1e1e1;
-            border-radius: 8px;
-            font-size: 16px;
-            transition: border-color 0.3s ease;
-        }
-
-        .form-group input:focus, .form-group select:focus {
-            outline: none;
-            border-color: #2196F3;
-        }
-
-        .btn {
-            background: linear-gradient(135deg, #4CAF50, #45a049);
-            color: white;
-            border: none;
-            padding: 15px 30px;
-            border-radius: 8px;
-            font-size: 16px;
-            cursor: pointer;
-            transition: all 0.3s ease;
-        }
-
-        .btn:hover {
-            transform: translateY(-2px);
-            box-shadow: 0 5px 15px rgba(76,175,80,0.3);
-        }
-
-        .btn-secondary {
-            background: linear-gradient(135deg, #FF9800, #F57C00);
-        }
-
-        .btn-secondary:hover {
-            box-shadow: 0 5px 15px rgba(255,152,0,0.3);
-        }
-
-        .stats-grid {
-            display: grid;
-            grid-template-columns: repeat(auto-fit, minmax(250px, 1fr));
-            gap: 20px;
-            margin-bottom: 30px;
-        }
-
-        .stat-card {
-            background: linear-gradient(135deg, #f8f9fa, #e9ecef);
-            padding: 25px;
-            border-radius: 15px;
-            box-shadow: 0 5px 15px rgba(0,0,0,0.1);
-            text-align: center;
-            border-left: 5px solid #2196F3;
-        }
-
-        .stat-value {
-            font-size: 2.5em;
-            font-weight: bold;
-            color: #2196F3;
-            margin-bottom: 10px;
-        }
-
-        .stat-label {
-            font-size: 1.1em;
-            color: #666;
-            margin-bottom: 5px;
-        }
-
-        .stat-detail {
-            font-size: 0.9em;
-            color: #888;
-        }
-
-        .progress-bar {
-            background: #e1e1e1;
-            border-radius: 10px;
-            height: 20px;
-            margin-top: 10px;
-            overflow: hidden;
-        }
-
-        .progress-fill {
-            background: linear-gradient(90deg, #4CAF50, #45a049);
-            height: 100%;
-            border-radius: 10px;
-            transition: width 0.3s ease;
-        }
-
-        .table-container {
-            background: white;
-            border-radius: 10px;
-            overflow: hidden;
-            box-shadow: 0 5px 15px rgba(0,0,0,0.1);
-            margin-top: 20px;
-        }
-
-        .filter-section {
-            padding: 20px;
-            background: #f8f9fa;
-            border-bottom: 1px solid #e1e1e1;
-            display: flex;
-            gap: 15px;
-            align-items: center;
-            flex-wrap: wrap;
-        }
-
-        table {
-            width: 100%;
-            border-collapse: collapse;
-        }
-
-        th, td {
-            padding: 15px;
-            text-align: left;
-            border-bottom: 1px solid #e1e1e1;
-        }
-
-        th {
-            background: linear-gradient(135deg, #2196F3, #1976D2);
-            color: white;
-            font-weight: 600;
-        }
-
-        tr:hover {
-            background: #f8f9fa;
-        }
-
-        .status-success {
-            background: #4CAF50;
-            color: white;
-            padding: 5px 12px;
-            border-radius: 20px;
-            font-size: 0.9em;
-        }
-
-        .status-delayed {
-            background: #f44336;
-            color: white;
-            padding: 5px 12px;
-            border-radius: 20px;
-            font-size: 0.9em;
-        }
-
-        .success-message {
-            background: #d4edda;
-            color: #155724;
-            padding: 15px;
-            border-radius: 8px;
-            margin-bottom: 20px;
-            border-left: 5px solid #4CAF50;
-        }
-
-        .error-message {
-            background: #f8d7da;
-            color: #721c24;
-            padding: 15px;
-            border-radius: 8px;
-            margin-bottom: 20px;
-            border-left: 5px solid #f44336;
-        }
-
-        .setup-section {
-            background: #fff3cd;
-            padding: 20px;
-            border-radius: 8px;
-            margin-bottom: 20px;
-            border-left: 5px solid #ffc107;
-        }
-
-        .setup-section h3 {
-            color: #856404;
-            margin-bottom: 15px;
-        }
-
-        .setup-section p {
-            color: #856404;
-            line-height: 1.6;
-            margin-bottom: 10px;
-        }
-
-        .loading {
-            text-align: center;
-            padding: 20px;
-            color: #666;
-        }
-
-        @media (max-width: 768px) {
-            .nav {
-                flex-direction: column;
-                gap: 10px;
-            }
-
-            .form-grid {
-                grid-template-columns: 1fr;
-            }
-
-            .stats-grid {
-                grid-template-columns: 1fr;
-            }
-
-            .filter-section {
-                flex-direction: column;
-                align-items: stretch;
-            }
-
-            table {
-                font-size: 14px;
-            }
-
-            th, td {
-                padding: 10px 5px;
-            }
-        }
-    </style>
+    <title>Delivery Tracker</title>
+    <link rel="stylesheet" href="styling.css">
 </head>
 <body>
     <div class="container">
-        <div class="header">
-            <h1>🚛 Delivery Tracking System</h1>
-            <div class="nav">
-                <button class="nav-btn active" onclick="showSection('entry')">New Delivery</button>
-                <button class="nav-btn" onclick="showSection('dashboard')">Dashboard</button>
-                <button class="nav-btn" onclick="showSection('records')">View Records</button>
-                <button class="nav-btn" onclick="showSection('setup')">Setup</button>
+        <header>
+            <h1>Delivery Management System</h1>
+            <nav>
+                <button id="newDeliveryBtn" class="nav-btn active">New Delivery</button>
+                <button id="viewDashboardBtn" class="nav-btn">Dashboard</button>
+            </nav>
+        </header>
+
+        <!-- New Delivery Form -->
+        <div id="newDeliverySection" class="section active">
+            <h2>New Delivery Record</h2>
+            <form id="deliveryForm" class="delivery-form">
+                <div class="form-group">
+                    <label for="invoiceNumber">Invoice Number:</label>
+                    <input type="text" id="invoiceNumber" required>
+                </div>
+                
+                <div class="form-group">
+                    <label for="deliveryDate">Delivery Date:</label>
+                    <input type="date" id="deliveryDate" required>
+                </div>
+                
+                <div class="form-group">
+                    <label for="dispatchTime">Dispatch Time:</label>
+                    <input type="time" id="dispatchTime" required>
+                </div>
+                
+                <div class="form-group">
+                    <label for="arrivalTime">Arrival Time:</label>
+                    <input type="time" id="arrivalTime" required>
+                </div>
+                
+                <div class="form-group">
+                    <label for="storeSupervisor">Store Supervisor:</label>
+                    <input type="text" id="storeSupervisor" required>
+                </div>
+                
+                <div class="form-group">
+                    <label for="deliveryPerson">Delivery Person:</label>
+                    <input type="text" id="deliveryPerson" required>
+                </div>
+                
+                <div class="form-group">
+                    <label for="vehicleNumber">Vehicle Number:</label>
+                    <input type="text" id="vehicleNumber" required>
+                </div>
+                
+                <button type="submit" class="submit-btn">Add Delivery Record</button>
+            </form>
+        </div>
+
+        <!-- Dashboard Section -->
+        <div id="dashboardSection" class="section">
+            <h2>Dashboard</h2>
+            
+            <!-- Performance Metrics -->
+            <div class="metrics-container">
+                <div class="metric-card">
+                    <h3>Daily Performance</h3>
+                    <div class="metric-value" id="dailySuccessRate">Loading...</div>
+                    <div class="metric-details">
+                        <p>Total Deliveries: <span id="dailyTotal">0</span></p>
+                        <p>Successful: <span id="dailySuccessful">0</span></p>
+                    </div>
+                </div>
+                
+                <div class="metric-card">
+                    <h3>Weekly Performance</h3>
+                    <div class="metric-value" id="weeklySuccessRate">Loading...</div>
+                    <div class="metric-details">
+                        <p>Days with Deliveries: <span id="weeklyDays">0</span></p>
+                        <p>Total Deliveries: <span id="weeklyTotal">0</span></p>
+                    </div>
+                </div>
+                
+                <div class="metric-card">
+                    <h3>Target Achievement</h3>
+                    <div class="metric-value" id="monthlySuccessRate">Loading...</div>
+                    <div class="target-bar">
+                        <div class="target-progress" id="targetProgress"></div>
+                        <span class="target-text">vs 95% Target</span>
+                    </div>
+                </div>
+            </div>
+
+            <!-- Date Filter -->
+            <div class="filter-section">
+                <h3>Delivery Records</h3>
+                <div class="filter-controls">
+                    <label for="filterDate">Filter by Date:</label>
+                    <input type="date" id="filterDate">
+                    <button id="clearFilterBtn">Clear</button>
+                </div>
+            </div>
+
+            <!-- Delivery Records Table -->
+            <div class="table-container">
+                <table id="deliveryTable">
+                    <thead>
+                        <tr>
+                            <th>Date</th>
+                            <th>Invoice #</th>
+                            <th>Dispatch</th>
+                            <th>Arrival</th>
+                            <th>Duration</th>
+                            <th>Status</th>
+                            <th>Supervisor</th>
+                            <th>Delivery Person</th>
+                            <th>Vehicle</th>
+                            <th>Actions</th>
+                        </tr>
+                    </thead>
+                    <tbody id="deliveryTableBody">
+                        <tr>
+                            <td colspan="10" class="loading">Loading delivery records...</td>
+                        </tr>
+                    </tbody>
+                </table>
             </div>
         </div>
 
-        <div class="content">
-            <!-- Setup Section -->
-            <div id="setup" class="section">
-                <div class="setup-section">
-                    <h3>📋 Google Sheets Setup Instructions</h3>
-                    <p><strong>Step 1:</strong> Create a new Google Sheet</p>
-                    <p><strong>Step 2:</strong> Add these exact column headers in row 1:</p>
-                    <p><em>Invoice Number | Delivery Date | Dispatch Time | Arrival Time | Store Supervisor | Delivery Person | Vehicle Number | Delivery Duration | Status</em></p>
-                    <p><strong>Step 3:</strong> Share your Google Sheet with "Anyone with the link can edit"</p>
-                    <p><strong>Step 4:</strong> Copy the sheet ID from URL (between /d/ and /edit) and enter below</p>
-                    <p><strong>Step 5:</strong> Test the connection</p>
-                </div>
-
-                <div class="form-group">
-                    <label for="sheetId">Google Sheet ID:</label>
-                    <input type="text" id="sheetId" placeholder="Enter your Google Sheet ID">
-                    <button class="btn" onclick="saveSheetId()" style="margin-top: 10px;">Save Sheet ID</button>
-                    <button class="btn btn-secondary" onclick="testConnection()" style="margin-top: 10px;">Test Connection</button>
-                </div>
-
-                <div class="form-group">
-                    <label for="gasUrl">Google Apps Script Web App URL (Optional for writing):</label>
-                    <input type="text" id="gasUrl" placeholder="Enter your Google Apps Script Web App URL">
-                    <button class="btn" onclick="saveGasUrl()" style="margin-top: 10px;">Save GAS URL</button>
-                </div>
-
-                <div id="setupMessage"></div>
-            </div>
-
-            <!-- Entry Section -->
-            <div id="entry" class="section active">
-                <h2>📝 New Delivery Record</h2>
-                
-                <div id="entryMessage"></div>
-
-                <form id="deliveryForm">
-                    <div class="form-grid">
-                        <div class="form-group">
-                            <label for="invoiceNumber">Invoice Number *</label>
-                            <input type="text" id="invoiceNumber" required>
-                        </div>
-
-                        <div class="form-group">
-                            <label for="deliveryDate">Delivery Date *</label>
-                            <input type="date" id="deliveryDate" required>
-                        </div>
-
-                        <div class="form-group">
-                            <label for="dispatchTime">Dispatch Time *</label>
-                            <input type="time" id="dispatchTime" required>
-                        </div>
-
-                        <div class="form-group">
-                            <label for="arrivalTime">Arrival Time *</label>
-                            <input type="time" id="arrivalTime" required>
-                        </div>
-
-                        <div class="form-group">
-                            <label for="storeSupervisor">Store Supervisor *</label>
-                            <input type="text" id="storeSupervisor" required>
-                        </div>
-
-                        <div class="form-group">
-                            <label for="deliveryPerson">Delivery Person *</label>
-                            <input type="text" id="deliveryPerson" required>
-                        </div>
-
-                        <div class="form-group">
-                            <label for="vehicleNumber">Vehicle Number *</label>
-                            <input type="text" id="vehicleNumber" required>
-                        </div>
-                    </div>
-
-                    <button type="submit" class="btn">🚀 Submit Delivery Record</button>
-                </form>
-            </div>
-
-            <!-- Dashboard Section -->
-            <div id="dashboard" class="section">
-                <h2>📊 Performance Dashboard</h2>
-                
-                <div class="stats-grid">
-                    <div class="stat-card">
-                        <div class="stat-label">Daily Performance</div>
-                        <div class="stat-value" id="dailySuccess">0.0%</div>
-                        <div class="stat-detail">Success Rate</div>
-                        <div class="stat-detail">Total: <span id="dailyTotal">0</span> | Successful: <span id="dailySuccessful">0</span></div>
-                    </div>
-
-                    <div class="stat-card">
-                        <div class="stat-label">Weekly Performance</div>
-                        <div class="stat-value" id="weeklySuccess">0.0%</div>
-                        <div class="stat-detail">Average Success Rate</div>
-                        <div class="stat-detail">Days: <span id="weeklyDays">0</span> | Total: <span id="weeklyTotal">0</span></div>
-                    </div>
-
-                    <div class="stat-card">
-                        <div class="stat-label">Target Achievement</div>
-                        <div class="stat-value" id="monthlySuccess">0.0%</div>
-                        <div class="stat-detail">vs 95% Target</div>
-                        <div class="progress-bar">
-                            <div class="progress-fill" id="targetProgress" style="width: 0%"></div>
-                        </div>
-                    </div>
-                </div>
-
-                <button class="btn btn-secondary" onclick="loadDashboard()">🔄 Refresh Dashboard</button>
-            </div>
-
-            <!-- Records Section -->
-            <div id="records" class="section">
-                <h2>📋 Delivery Records</h2>
-                
-                <div class="filter-section">
-                    <input type="date" id="filterDate" placeholder="Filter by date">
-                    <button class="btn btn-secondary" onclick="filterRecords()">Filter</button>
-                    <button class="btn" onclick="clearFilter()">Clear</button>
-                    <button class="btn btn-secondary" onclick="loadRecords()">🔄 Refresh</button>
-                </div>
-
-                <div class="table-container">
-                    <table id="recordsTable">
-                        <thead>
-                            <tr>
-                                <th>Date</th>
-                                <th>Invoice #</th>
-                                <th>Dispatch</th>
-                                <th>Arrival</th>
-                                <th>Duration</th>
-                                <th>Status</th>
-                                <th>Supervisor</th>
-                                <th>Delivery Person</th>
-                                <th>Vehicle</th>
-                            </tr>
-                        </thead>
-                        <tbody id="recordsBody">
-                            <tr>
-                                <td colspan="9" style="text-align: center; padding: 30px;">No records found. Click refresh to load data.</td>
-                            </tr>
-                        </tbody>
-                    </table>
-                </div>
-            </div>
+        <!-- Loading Overlay -->
+        <div id="loadingOverlay" class="loading-overlay hidden">
+            <div class="spinner"></div>
+            <p>Processing...</p>
         </div>
     </div>
 
-    <script>
-        // Global variables
-        let deliveryData = [];
-        const SHEET_ID_KEY = 'deliveryTrackerSheetId';
-
-        // Initialize the app
-        document.addEventListener('DOMContentLoaded', function() {
-            loadSheetId();
-            setupFormSubmission();
-            setDefaultDate();
-        });
-
-        // Navigation functions
-        function showSection(sectionId) {
-            // Hide all sections
-            document.querySelectorAll('.section').forEach(section => {
-                section.classList.remove('active');
-            });
-
-            // Remove active class from nav buttons
-            document.querySelectorAll('.nav-btn').forEach(btn => {
-                btn.classList.remove('active');
-            });
-
-            // Show selected section
-            document.getElementById(sectionId).classList.add('active');
-            
-            // Add active class to clicked button
-            event.target.classList.add('active');
-
-            // Load data when showing dashboard or records
-            if (sectionId === 'dashboard') {
-                loadDashboard();
-            } else if (sectionId === 'records') {
-                loadRecords();
-            }
-        }
-
-        // Google Sheets Integration Functions
-        function getSheetId() {
-            return localStorage.getItem(SHEET_ID_KEY);
-        }
-
-        function saveSheetId() {
-            const sheetId = document.getElementById('sheetId').value.trim();
-            if (!sheetId) {
-                showMessage('setupMessage', 'Please enter a valid Google Sheet ID', 'error');
-                return;
-            }
-
-            localStorage.setItem(SHEET_ID_KEY, sheetId);
-            showMessage('setupMessage', 'Google Sheet ID saved successfully!', 'success');
-        }
-
-        function loadSheetId() {
-            const savedSheetId = localStorage.getItem(SHEET_ID_KEY);
-            if (savedSheetId) {
-                document.getElementById('sheetId').value = savedSheetId;
-            }
-            
-            const savedGasUrl = localStorage.getItem('gasWebAppUrl');
-            if (savedGasUrl) {
-                document.getElementById('gasUrl').value = savedGasUrl;
-            }
-        }
-
-        function saveGasUrl() {
-            const gasUrl = document.getElementById('gasUrl').value.trim();
-            if (!gasUrl) {
-                showMessage('setupMessage', 'Please enter a valid Google Apps Script URL', 'error');
-                return;
-            }
-
-            localStorage.setItem('gasWebAppUrl', gasUrl);
-            showMessage('setupMessage', 'Google Apps Script URL saved successfully!', 'success');
-        }
-
-        async function testConnection() {
-            const sheetId = getSheetId();
-            if (!sheetId) {
-                showMessage('setupMessage', 'Please save a Google Sheet ID first', 'error');
-                return;
-            }
-
-            try {
-                showMessage('setupMessage', 'Testing connection...', 'success');
-                const data = await fetchSheetData(sheetId);
-                showMessage('setupMessage', `Connection successful! Found ${data.length} records in your sheet.`, 'success');
-            } catch (error) {
-                showMessage('setupMessage', `Connection failed: ${error.message}. Please check your Sheet ID and permissions.`, 'error');
-            }
-        }
-
-        async function fetchSheetData(sheetId) {
-            const url = `https://docs.google.com/spreadsheets/d/${sheetId}/gviz/tq?tqx=out:csv`;
-            
-            const response = await fetch(url);
-            if (!response.ok) {
-                throw new Error('Failed to fetch sheet data. Check if the sheet is publicly accessible.');
-            }
-
-            const csvText = await response.text();
-            const rows = csvText.split('\n').map(row => 
-                row.split(',').map(cell => cell.replace(/"/g, '').trim())
-            );
-
-            // Remove header row and empty rows
-            const dataRows = rows.slice(1).filter(row => row.length > 1 && row[0]);
-            
-            return dataRows.map(row => ({
-                invoiceNumber: row[0] || '',
-                deliveryDate: row[1] || '',
-                dispatchTime: row[2] || '',
-                arrivalTime: row[3] || '',
-                storeSupervisor: row[4] || '',
-                deliveryPerson: row[5] || '',
-                vehicleNumber: row[6] || '',
-                duration: row[7] || '',
-                status: row[8] || ''
-            }));
-        }
-
-        async function appendToSheet(sheetId, rowData) {
-            // Replace this URL with your Google Apps Script Web App URL
-            const scriptUrl = localStorage.getItem('gasWebAppUrl') || 'YOUR_GOOGLE_APPS_SCRIPT_WEB_APP_URL';
-            
-            if (scriptUrl === 'YOUR_GOOGLE_APPS_SCRIPT_WEB_APP_URL') {
-                // For demo purposes, simulate the operation
-                console.log('Data to be written to Google Sheet:', rowData);
-                return { success: true, message: 'Demo mode - data logged to console' };
-            }
-            
-            try {
-                const response = await fetch(scriptUrl, {
-                    method: 'POST',
-                    headers: {
-                        'Content-Type': 'application/json',
-                    },
-                    body: JSON.stringify({
-                        sheetId: sheetId,
-                        data: rowData
-                    })
-                });
-
-                if (!response.ok) {
-                    throw new Error('Failed to write to sheet');
-                }
-
-                return await response.json();
-            } catch (error) {
-                console.error('Error writing to sheet:', error);
-                throw new Error('Failed to write to Google Sheet: ' + error.message);
-            }
-        }
-
-        // Form functions
-        function setDefaultDate() {
-            const today = new Date().toISOString().split('T')[0];
-            document.getElementById('deliveryDate').value = today;
-        }
-
-        function setupFormSubmission() {
-            document.getElementById('deliveryForm').addEventListener('submit', function(e) {
-                e.preventDefault();
-                submitDeliveryRecord();
-            });
-        }
-
-        function calculateDeliveryDuration(dispatchTime, arrivalTime) {
-            const dispatch = new Date(`2000-01-01 ${dispatchTime}`);
-            const arrival = new Date(`2000-01-01 ${arrivalTime}`);
-            
-            // Handle case where arrival is next day
-            if (arrival < dispatch) {
-                arrival.setDate(arrival.getDate() + 1);
-            }
-            
-            const diffMs = arrival - dispatch;
-            const diffMinutes = Math.floor(diffMs / (1000 * 60));
-            
-            return diffMinutes;
-        }
-
-        function getDeliveryStatus(duration) {
-            return duration <= 45 ? 'Success' : 'Delayed';
-        }
-
-        async function submitDeliveryRecord() {
-            const sheetId = getSheetId();
-            if (!sheetId) {
-                showMessage('entryMessage', 'Please setup your Google Sheet ID first in the Setup tab.', 'error');
-                return;
-            }
-
-            // Get form data
-            const formData = {
-                invoiceNumber: document.getElementById('invoiceNumber').value,
-                deliveryDate: document.getElementById('deliveryDate').value,
-                dispatchTime: document.getElementById('dispatchTime').value,
-                arrivalTime: document.getElementById('arrivalTime').value,
-                storeSupervisor: document.getElementById('storeSupervisor').value,
-                deliveryPerson: document.getElementById('deliveryPerson').value,
-                vehicleNumber: document.getElementById('vehicleNumber').value
-            };
-
-            // Calculate duration and status
-            const duration = calculateDeliveryDuration(formData.dispatchTime, formData.arrivalTime);
-            const status = getDeliveryStatus(duration);
-
-            // Prepare data for Google Sheets
-            const rowData = [
-                formData.invoiceNumber,
-                formData.deliveryDate,
-                formData.dispatchTime,
-                formData.arrivalTime,
-                formData.storeSupervisor,
-                formData.deliveryPerson,
-                formData.vehicleNumber,
-                `${duration} min`,
-                status
-            ];
-
-            try {
-                showMessage('entryMessage', 'Submitting record...', 'success');
-                
-                // Try to write to Google Sheets
-                await appendToSheet(sheetId, rowData);
-                
-                showMessage('entryMessage', 
-                    `✅ Record successfully added to Google Sheet! Duration: ${duration} minutes, Status: ${status}`, 'success');
-                
-                // Reset form
-                document.getElementById('deliveryForm').reset();
-                setDefaultDate();
-
-            } catch (error) {
-                console.error('Error submitting record:', error);
-                
-                // Fallback: Store locally for backup
-                const existingData = JSON.parse(localStorage.getItem('deliveryRecords') || '[]');
-                const newRecord = {
-                    ...formData,
-                    duration: duration,
-                    status: status,
-                    timestamp: new Date().toISOString()
-                };
-                existingData.push(newRecord);
-                localStorage.setItem('deliveryRecords', JSON.stringify(existingData));
-
-                showMessage('entryMessage', 
-                    `⚠️ ${error.message}. Record saved locally as backup. Duration: ${duration} minutes, Status: ${status}`, 'error');
-            }
-        }
-
-        // Dashboard functions
-        async function loadDashboard() {
-            const sheetId = getSheetId();
-            if (!sheetId) {
-                showMessage('', 'Please setup your Google Sheet ID first', 'error');
-                return;
-            }
-
-            try {
-                const records = await fetchSheetData(sheetId);
-                calculateDashboardStats(records);
-            } catch (error) {
-                // Fallback to localStorage data for demo
-                const localRecords = JSON.parse(localStorage.getItem('deliveryRecords') || '[]');
-                calculateDashboardStats(localRecords);
-                console.error('Error loading dashboard:', error);
-            }
-        }
-
-        function calculateDashboardStats(records) {
-            const today = new Date().toISOString().split('T')[0];
-            const weekStart = getWeekStart(new Date());
-            const monthStart = new Date(new Date().getFullYear(), new Date().getMonth(), 1);
-
-            // Parse duration for calculation
-            const parseRecords = records.map(r => ({
-                ...r,
-                duration: parseInt(r.duration) || 0,
-                status: r.status || (parseInt(r.duration) <= 45 ? 'Success' : 'Delayed')
-            }));
-
-            // Daily performance
-            const dailyRecords = parseRecords.filter(r => r.deliveryDate === today);
-            const dailySuccessful = dailyRecords.filter(r => r.status === 'Success').length;
-            const dailySuccessRate = dailyRecords.length > 0 ? (dailySuccessful / dailyRecords.length * 100).toFixed(1) : '0.0';
-
-            document.getElementById('dailySuccess').textContent = dailySuccessRate + '%';
-            document.getElementById('dailyTotal').textContent = dailyRecords.length;
-            document.getElementById('dailySuccessful').textContent = dailySuccessful;
-
-            // Weekly performance
-            const weeklyRecords = parseRecords.filter(r => new Date(r.deliveryDate) >= weekStart);
-            const weeklyDays = [...new Set(weeklyRecords.map(r => r.deliveryDate))].length;
-            const weeklySuccessful = weeklyRecords.filter(r => r.status === 'Success').length;
-            const weeklySuccessRate = weeklyRecords.length > 0 ? (weeklySuccessful / weeklyRecords.length * 100).toFixed(1) : '0.0';
-
-            document.getElementById('weeklySuccess').textContent = weeklySuccessRate + '%';
-            document.getElementById('weeklyDays').textContent = weeklyDays;
-            document.getElementById('weeklyTotal').textContent = weeklyRecords.length;
-
-            // Monthly performance (target achievement)
-            const monthlyRecords = parseRecords.filter(r => new Date(r.deliveryDate) >= monthStart);
-            const monthlySuccessful = monthlyRecords.filter(r => r.status === 'Success').length;
-            const monthlySuccessRate = monthlyRecords.length > 0 ? (monthlySuccessful / monthlyRecords.length * 100).toFixed(1) : '0.0';
-
-            document.getElementById('monthlySuccess').textContent = monthlySuccessRate + '%';
-            document.getElementById('targetProgress').style.width = Math.min(monthlySuccessRate, 100) + '%';
-        }
-
-        // Records functions
-        async function loadRecords() {
-            const sheetId = getSheetId();
-            if (!sheetId) {
-                displayRecords([]);
-                return;
-            }
-
-            try {
-                const records = await fetchSheetData(sheetId);
-                displayRecords(records);
-            } catch (error) {
-                // Fallback to localStorage for demo
-                const localRecords = JSON.parse(localStorage.getItem('deliveryRecords') || '[]');
-                displayRecords(localRecords);
-                console.error('Error loading records:', error);
-            }
-        }
-
-        function displayRecords(records) {
-            const tbody = document.getElementById('recordsBody');
-            
-            if (records.length === 0) {
-                tbody.innerHTML = '<tr><td colspan="9" style="text-align: center; padding: 30px;">No records found.</td></tr>';
-                return;
-            }
-
-            tbody.innerHTML = records
-                .sort((a, b) => new Date(b.deliveryDate) - new Date(a.deliveryDate))
-                .map(record => {
-                    const duration = record.duration || '0 min';
-                    const status = record.status || 'Unknown';
-                    return `
-                        <tr>
-                            <td>${record.deliveryDate}</td>
-                            <td>${record.invoiceNumber}</td>
-                            <td>${record.dispatchTime}</td>
-                            <td>${record.arrivalTime}</td>
-                            <td>${duration}</td>
-                            <td><span class="status-${status.toLowerCase()}">${status}</span></td>
-                            <td>${record.storeSupervisor}</td>
-                            <td>${record.deliveryPerson}</td>
-                            <td>${record.vehicleNumber}</td>
-                        </tr>
-                    `;
-                }).join('');
-        }
-
-        async function filterRecords() {
-            const filterDate = document.getElementById('filterDate').value;
-            if (!filterDate) {
-                alert('Please select a date to filter');
-                return;
-            }
-
-            const sheetId = getSheetId();
-            if (!sheetId) {
-                return;
-            }
-
-            try {
-                const records = await fetchSheetData(sheetId);
-                const filteredRecords = records.filter(r => r.deliveryDate === filterDate);
-                displayRecords(filteredRecords);
-            } catch (error) {
-                // Fallback to localStorage
-                const localRecords = JSON.parse(localStorage.getItem('deliveryRecords') || '[]');
-                const filteredRecords = localRecords.filter(r => r.deliveryDate === filterDate);
-                displayRecords(filteredRecords);
-            }
-        }
-
-        function clearFilter() {
-            document.getElementById('filterDate').value = '';
-            loadRecords();
-        }
-
-        // Utility functions
-        function getWeekStart(date) {
-            const d = new Date(date);
-            const day = d.getDay();
-            const diff = d.getDate() - day + (day === 0 ? -6 : 1); // Monday start
-            return new Date(d.setDate(diff));
-        }
-
-        function showMessage(elementId, message, type) {
-            const element = document.getElementById(elementId);
-            if (element) {
-                element.innerHTML = `<div class="${type}-message">${message}</div>`;
-                
-                // Auto-hide after 5 seconds
-                setTimeout(() => {
-                    element.innerHTML = '';
-                }, 5000);
-            }
-        }
-    </script>
+    <script src="script.js"></script>
 </body>
 </html>
