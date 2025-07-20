@@ -289,6 +289,42 @@ function normalizeDate(dateString) {
     return '';
 }
 
+// NEW FUNCTION: Format time to 12-hour format
+function formatTime12Hour(timeString) {
+    if (!timeString) return '';
+    
+    try {
+        // Handle various time formats
+        let timeToFormat = timeString;
+        
+        // If it's a full date string, extract just the time part
+        if (timeString.includes('GMT') || timeString.includes('T')) {
+            const date = new Date(timeString);
+            if (!isNaN(date.getTime())) {
+                timeToFormat = date.toTimeString().split(' ')[0].substring(0, 5); // Get HH:MM
+            }
+        }
+        
+        // Parse HH:MM format
+        const [hours, minutes] = timeToFormat.split(':');
+        const hour24 = parseInt(hours);
+        const min = parseInt(minutes) || 0;
+        
+        if (isNaN(hour24) || hour24 < 0 || hour24 > 23) {
+            return timeString; // Return original if invalid
+        }
+        
+        const hour12 = hour24 === 0 ? 12 : hour24 > 12 ? hour24 - 12 : hour24;
+        const ampm = hour24 >= 12 ? 'PM' : 'AM';
+        const formattedMinutes = min.toString().padStart(2, '0');
+        
+        return `${hour12}:${formattedMinutes} ${ampm}`;
+    } catch (error) {
+        console.error('Error formatting time:', error);
+        return timeString; // Return original if error
+    }
+}
+
 function populateTable(filterDate = null) {
     const tableBody = document.getElementById('deliveryTableBody');
     let filteredData = deliveryData;
@@ -306,12 +342,16 @@ function populateTable(filterDate = null) {
         const duration = record.duration || calculateDuration(record.dispatchTime, record.arrivalTime);
         const normalizedDate = normalizeDate(record.deliveryDate);
         
+        // Format times to 12-hour format
+        const formattedDispatchTime = formatTime12Hour(record.dispatchTime);
+        const formattedArrivalTime = formatTime12Hour(record.arrivalTime);
+        
         return `
             <tr>
                 <td>${formatDate(normalizedDate)}</td>
                 <td>${record.invoiceNumber}</td>
-                <td>${record.dispatchTime}</td>
-                <td>${record.arrivalTime}</td>
+                <td>${formattedDispatchTime}</td>
+                <td>${formattedArrivalTime}</td>
                 <td>${duration} min</td>
                 <td><span class="status-${record.status.toLowerCase()}">${record.status}</span></td>
                 <td>${record.storeSupervisor}</td>
@@ -327,8 +367,17 @@ function calculateDuration(dispatchTime, arrivalTime) {
     if (!dispatchTime || !arrivalTime) return 0;
     
     try {
-        const dispatch = new Date(`2000-01-01T${dispatchTime}`);
-        const arrival = new Date(`2000-01-01T${arrivalTime}`);
+        // Handle different time formats
+        let dispatch, arrival;
+        
+        if (dispatchTime.includes('GMT') || dispatchTime.includes('T')) {
+            dispatch = new Date(dispatchTime);
+            arrival = new Date(arrivalTime);
+        } else {
+            // Assume HH:MM format
+            dispatch = new Date(`2000-01-01T${dispatchTime}`);
+            arrival = new Date(`2000-01-01T${arrivalTime}`);
+        }
         
         if (isNaN(dispatch.getTime()) || isNaN(arrival.getTime())) {
             return 0;
