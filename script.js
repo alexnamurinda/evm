@@ -4,6 +4,7 @@ const CONFIG = {
     SHEET_URL: 'https://script.google.com/macros/s/AKfycbw8vmk6Xa1MmyuucBa2FqR_8L5oNCrKJPFEn2E3PRKsRljQEDep0Rp4hBApzwOPhTRN7w/exec' // Replace with your Web App URL
 };
 
+
 // Global variables
 let deliveryData = [];
 
