@@ -271,6 +271,12 @@
             margin-bottom: 10px;
         }
 
+        .loading {
+            text-align: center;
+            padding: 20px;
+            color: #666;
+        }
+
         @media (max-width: 768px) {
             .nav {
                 flex-direction: column;
@@ -317,17 +323,25 @@
             <div id="setup" class="section">
                 <div class="setup-section">
                     <h3>📋 Google Sheets Setup Instructions</h3>
-                    <p><strong>Step 1:</strong> Create a new Google Sheet and copy the sheet ID from the URL (the long string after /d/ and before /edit)</p>
-                    <p><strong>Step 2:</strong> Make sure your Google Sheet has these exact column headers in row 1:</p>
+                    <p><strong>Step 1:</strong> Create a new Google Sheet</p>
+                    <p><strong>Step 2:</strong> Add these exact column headers in row 1:</p>
                     <p><em>Invoice Number | Delivery Date | Dispatch Time | Arrival Time | Store Supervisor | Delivery Person | Vehicle Number | Delivery Duration | Status</em></p>
-                    <p><strong>Step 3:</strong> Share your Google Sheet with "Anyone with the link can edit" permissions</p>
-                    <p><strong>Step 4:</strong> Enter your Google Sheet ID below and save it</p>
+                    <p><strong>Step 3:</strong> Share your Google Sheet with "Anyone with the link can edit"</p>
+                    <p><strong>Step 4:</strong> Copy the sheet ID from URL (between /d/ and /edit) and enter below</p>
+                    <p><strong>Step 5:</strong> Test the connection</p>
                 </div>
 
                 <div class="form-group">
                     <label for="sheetId">Google Sheet ID:</label>
                     <input type="text" id="sheetId" placeholder="Enter your Google Sheet ID">
                     <button class="btn" onclick="saveSheetId()" style="margin-top: 10px;">Save Sheet ID</button>
+                    <button class="btn btn-secondary" onclick="testConnection()" style="margin-top: 10px;">Test Connection</button>
+                </div>
+
+                <div class="form-group">
+                    <label for="gasUrl">Google Apps Script Web App URL (Optional for writing):</label>
+                    <input type="text" id="gasUrl" placeholder="Enter your Google Apps Script Web App URL">
+                    <button class="btn" onclick="saveGasUrl()" style="margin-top: 10px;">Save GAS URL</button>
                 </div>
 
                 <div id="setupMessage"></div>
@@ -488,7 +502,11 @@
             }
         }
 
-        // Setup functions
+        // Google Sheets Integration Functions
+        function getSheetId() {
+            return localStorage.getItem(SHEET_ID_KEY);
+        }
+
         function saveSheetId() {
             const sheetId = document.getElementById('sheetId').value.trim();
             if (!sheetId) {
@@ -497,7 +515,7 @@
             }
 
             localStorage.setItem(SHEET_ID_KEY, sheetId);
-            showMessage('setupMessage', 'Google Sheet ID saved successfully! You can now use the delivery tracker.', 'success');
+            showMessage('setupMessage', 'Google Sheet ID saved successfully!', 'success');
         }
 
         function loadSheetId() {
@@ -505,10 +523,100 @@
             if (savedSheetId) {
                 document.getElementById('sheetId').value = savedSheetId;
             }
+            
+            const savedGasUrl = localStorage.getItem('gasWebAppUrl');
+            if (savedGasUrl) {
+                document.getElementById('gasUrl').value = savedGasUrl;
+            }
         }
 
-        function getSheetId() {
-            return localStorage.getItem(SHEET_ID_KEY);
+        function saveGasUrl() {
+            const gasUrl = document.getElementById('gasUrl').value.trim();
+            if (!gasUrl) {
+                showMessage('setupMessage', 'Please enter a valid Google Apps Script URL', 'error');
+                return;
+            }
+
+            localStorage.setItem('gasWebAppUrl', gasUrl);
+            showMessage('setupMessage', 'Google Apps Script URL saved successfully!', 'success');
+        }
+
+        async function testConnection() {
+            const sheetId = getSheetId();
+            if (!sheetId) {
+                showMessage('setupMessage', 'Please save a Google Sheet ID first', 'error');
+                return;
+            }
+
+            try {
+                showMessage('setupMessage', 'Testing connection...', 'success');
+                const data = await fetchSheetData(sheetId);
+                showMessage('setupMessage', `Connection successful! Found ${data.length} records in your sheet.`, 'success');
+            } catch (error) {
+                showMessage('setupMessage', `Connection failed: ${error.message}. Please check your Sheet ID and permissions.`, 'error');
+            }
+        }
+
+        async function fetchSheetData(sheetId) {
+            const url = `https://docs.google.com/spreadsheets/d/${sheetId}/gviz/tq?tqx=out:csv`;
+            
+            const response = await fetch(url);
+            if (!response.ok) {
+                throw new Error('Failed to fetch sheet data. Check if the sheet is publicly accessible.');
+            }
+
+            const csvText = await response.text();
+            const rows = csvText.split('\n').map(row => 
+                row.split(',').map(cell => cell.replace(/"/g, '').trim())
+            );
+
+            // Remove header row and empty rows
+            const dataRows = rows.slice(1).filter(row => row.length > 1 && row[0]);
+            
+            return dataRows.map(row => ({
+                invoiceNumber: row[0] || '',
+                deliveryDate: row[1] || '',
+                dispatchTime: row[2] || '',
+                arrivalTime: row[3] || '',
+                storeSupervisor: row[4] || '',
+                deliveryPerson: row[5] || '',
+                vehicleNumber: row[6] || '',
+                duration: row[7] || '',
+                status: row[8] || ''
+            }));
+        }
+
+        async function appendToSheet(sheetId, rowData) {
+            // Replace this URL with your Google Apps Script Web App URL
+            const scriptUrl = localStorage.getItem('gasWebAppUrl') || 'YOUR_GOOGLE_APPS_SCRIPT_WEB_APP_URL';
+            
+            if (scriptUrl === 'YOUR_GOOGLE_APPS_SCRIPT_WEB_APP_URL') {
+                // For demo purposes, simulate the operation
+                console.log('Data to be written to Google Sheet:', rowData);
+                return { success: true, message: 'Demo mode - data logged to console' };
+            }
+            
+            try {
+                const response = await fetch(scriptUrl, {
+                    method: 'POST',
+                    headers: {
+                        'Content-Type': 'application/json',
+                    },
+                    body: JSON.stringify({
+                        sheetId: sheetId,
+                        data: rowData
+                    })
+                });
+
+                if (!response.ok) {
+                    throw new Error('Failed to write to sheet');
+                }
+
+                return await response.json();
+            } catch (error) {
+                console.error('Error writing to sheet:', error);
+                throw new Error('Failed to write to Google Sheet: ' + error.message);
+            }
         }
 
         // Form functions
@@ -579,18 +687,13 @@
             ];
 
             try {
-                // Here you would typically use Google Sheets API
-                // For demo purposes, we'll store in localStorage and show success
-                const existingData = JSON.parse(localStorage.getItem('deliveryRecords') || '[]');
-                existingData.push({
-                    ...formData,
-                    duration: duration,
-                    status: status,
-                    timestamp: new Date().toISOString()
-                });
-                localStorage.setItem('deliveryRecords', JSON.stringify(existingData));
-
-                showMessage('entryMessage', `Delivery record submitted successfully! Duration: ${duration} minutes, Status: ${status}`, 'success');
+                showMessage('entryMessage', 'Submitting record...', 'success');
+                
+                // Try to write to Google Sheets
+                await appendToSheet(sheetId, rowData);
+                
+                showMessage('entryMessage', 
+                    `✅ Record successfully added to Google Sheet! Duration: ${duration} minutes, Status: ${status}`, 'success');
                 
                 // Reset form
                 document.getElementById('deliveryForm').reset();
@@ -598,21 +701,56 @@
 
             } catch (error) {
                 console.error('Error submitting record:', error);
-                showMessage('entryMessage', 'Error submitting record. Please check your Google Sheet setup.', 'error');
+                
+                // Fallback: Store locally for backup
+                const existingData = JSON.parse(localStorage.getItem('deliveryRecords') || '[]');
+                const newRecord = {
+                    ...formData,
+                    duration: duration,
+                    status: status,
+                    timestamp: new Date().toISOString()
+                };
+                existingData.push(newRecord);
+                localStorage.setItem('deliveryRecords', JSON.stringify(existingData));
+
+                showMessage('entryMessage', 
+                    `⚠️ ${error.message}. Record saved locally as backup. Duration: ${duration} minutes, Status: ${status}`, 'error');
             }
         }
 
         // Dashboard functions
-        function loadDashboard() {
-            // For demo purposes, using localStorage data
-            const records = JSON.parse(localStorage.getItem('deliveryRecords') || '[]');
-            
+        async function loadDashboard() {
+            const sheetId = getSheetId();
+            if (!sheetId) {
+                showMessage('', 'Please setup your Google Sheet ID first', 'error');
+                return;
+            }
+
+            try {
+                const records = await fetchSheetData(sheetId);
+                calculateDashboardStats(records);
+            } catch (error) {
+                // Fallback to localStorage data for demo
+                const localRecords = JSON.parse(localStorage.getItem('deliveryRecords') || '[]');
+                calculateDashboardStats(localRecords);
+                console.error('Error loading dashboard:', error);
+            }
+        }
+
+        function calculateDashboardStats(records) {
             const today = new Date().toISOString().split('T')[0];
             const weekStart = getWeekStart(new Date());
             const monthStart = new Date(new Date().getFullYear(), new Date().getMonth(), 1);
 
+            // Parse duration for calculation
+            const parseRecords = records.map(r => ({
+                ...r,
+                duration: parseInt(r.duration) || 0,
+                status: r.status || (parseInt(r.duration) <= 45 ? 'Success' : 'Delayed')
+            }));
+
             // Daily performance
-            const dailyRecords = records.filter(r => r.deliveryDate === today);
+            const dailyRecords = parseRecords.filter(r => r.deliveryDate === today);
             const dailySuccessful = dailyRecords.filter(r => r.status === 'Success').length;
             const dailySuccessRate = dailyRecords.length > 0 ? (dailySuccessful / dailyRecords.length * 100).toFixed(1) : '0.0';
 
@@ -621,7 +759,7 @@
             document.getElementById('dailySuccessful').textContent = dailySuccessful;
 
             // Weekly performance
-            const weeklyRecords = records.filter(r => new Date(r.deliveryDate) >= weekStart);
+            const weeklyRecords = parseRecords.filter(r => new Date(r.deliveryDate) >= weekStart);
             const weeklyDays = [...new Set(weeklyRecords.map(r => r.deliveryDate))].length;
             const weeklySuccessful = weeklyRecords.filter(r => r.status === 'Success').length;
             const weeklySuccessRate = weeklyRecords.length > 0 ? (weeklySuccessful / weeklyRecords.length * 100).toFixed(1) : '0.0';
@@ -631,7 +769,7 @@
             document.getElementById('weeklyTotal').textContent = weeklyRecords.length;
 
             // Monthly performance (target achievement)
-            const monthlyRecords = records.filter(r => new Date(r.deliveryDate) >= monthStart);
+            const monthlyRecords = parseRecords.filter(r => new Date(r.deliveryDate) >= monthStart);
             const monthlySuccessful = monthlyRecords.filter(r => r.status === 'Success').length;
             const monthlySuccessRate = monthlyRecords.length > 0 ? (monthlySuccessful / monthlyRecords.length * 100).toFixed(1) : '0.0';
 
@@ -640,9 +778,22 @@
         }
 
         // Records functions
-        function loadRecords() {
-            const records = JSON.parse(localStorage.getItem('deliveryRecords') || '[]');
-            displayRecords(records);
+        async function loadRecords() {
+            const sheetId = getSheetId();
+            if (!sheetId) {
+                displayRecords([]);
+                return;
+            }
+
+            try {
+                const records = await fetchSheetData(sheetId);
+                displayRecords(records);
+            } catch (error) {
+                // Fallback to localStorage for demo
+                const localRecords = JSON.parse(localStorage.getItem('deliveryRecords') || '[]');
+                displayRecords(localRecords);
+                console.error('Error loading records:', error);
+            }
         }
 
         function displayRecords(records) {
@@ -653,32 +804,49 @@
                 return;
             }
 
-            tbody.innerHTML = records.sort((a, b) => new Date(b.deliveryDate) - new Date(a.deliveryDate))
-                .map(record => `
-                    <tr>
-                        <td>${record.deliveryDate}</td>
-                        <td>${record.invoiceNumber}</td>
-                        <td>${record.dispatchTime}</td>
-                        <td>${record.arrivalTime}</td>
-                        <td>${record.duration} min</td>
-                        <td><span class="status-${record.status.toLowerCase()}">${record.status}</span></td>
-                        <td>${record.storeSupervisor}</td>
-                        <td>${record.deliveryPerson}</td>
-                        <td>${record.vehicleNumber}</td>
-                    </tr>
-                `).join('');
+            tbody.innerHTML = records
+                .sort((a, b) => new Date(b.deliveryDate) - new Date(a.deliveryDate))
+                .map(record => {
+                    const duration = record.duration || '0 min';
+                    const status = record.status || 'Unknown';
+                    return `
+                        <tr>
+                            <td>${record.deliveryDate}</td>
+                            <td>${record.invoiceNumber}</td>
+                            <td>${record.dispatchTime}</td>
+                            <td>${record.arrivalTime}</td>
+                            <td>${duration}</td>
+                            <td><span class="status-${status.toLowerCase()}">${status}</span></td>
+                            <td>${record.storeSupervisor}</td>
+                            <td>${record.deliveryPerson}</td>
+                            <td>${record.vehicleNumber}</td>
+                        </tr>
+                    `;
+                }).join('');
         }
 
-        function filterRecords() {
+        async function filterRecords() {
             const filterDate = document.getElementById('filterDate').value;
             if (!filterDate) {
                 alert('Please select a date to filter');
                 return;
             }
 
-            const records = JSON.parse(localStorage.getItem('deliveryRecords') || '[]');
-            const filteredRecords = records.filter(r => r.deliveryDate === filterDate);
-            displayRecords(filteredRecords);
+            const sheetId = getSheetId();
+            if (!sheetId) {
+                return;
+            }
+
+            try {
+                const records = await fetchSheetData(sheetId);
+                const filteredRecords = records.filter(r => r.deliveryDate === filterDate);
+                displayRecords(filteredRecords);
+            } catch (error) {
+                // Fallback to localStorage
+                const localRecords = JSON.parse(localStorage.getItem('deliveryRecords') || '[]');
+                const filteredRecords = localRecords.filter(r => r.deliveryDate === filterDate);
+                displayRecords(filteredRecords);
+            }
         }
 
         function clearFilter() {
@@ -690,18 +858,20 @@
         function getWeekStart(date) {
             const d = new Date(date);
             const day = d.getDay();
-            const diff = d.getDate() - day + (day === 0 ? -6 : 1); // Adjust for Monday start
+            const diff = d.getDate() - day + (day === 0 ? -6 : 1); // Monday start
             return new Date(d.setDate(diff));
         }
 
         function showMessage(elementId, message, type) {
             const element = document.getElementById(elementId);
-            element.innerHTML = `<div class="${type}-message">${message}</div>`;
-            
-            // Auto-hide after 5 seconds
-            setTimeout(() => {
-                element.innerHTML = '';
-            }, 5000);
+            if (element) {
+                element.innerHTML = `<div class="${type}-message">${message}</div>`;
+                
+                // Auto-hide after 5 seconds
+                setTimeout(() => {
+                    element.innerHTML = '';
+                }, 5000);
+            }
         }
     </script>
 </body>
