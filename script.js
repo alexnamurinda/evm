@@ -1,7 +1,7 @@
 // Configuration - Replace with your actual Google Sheets details
 const CONFIG = {
     SHEET_ID: '1jddhIBS_JxfDq-bwMgAmqBI8VBX2VCAhT6wk2aBcBmU', // Replace with your Google Sheet ID
-    SHEET_URL: 'https://script.google.com/macros/s/AKfycbx-eHp2Au6bCdpW6CbjQ1CzaCnqy1ET6MJVXXvG4-hUNKwLj9J-ClLAM9N39la7TKJVig/exec' // Replace with your Web App URL
+    SHEET_URL: 'https://script.google.com/macros/s/AKfycbyTJ6Fmt9CaV4MNZ5Fi3ayzH_tE4tOdHZMtja0-4LgXNNBvYbiFBhHhD38aiulDcHqPeQ/exec' // Replace with your Web App URL
 };
 
 // Global variables
